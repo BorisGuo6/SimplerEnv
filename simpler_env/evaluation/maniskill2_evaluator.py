@@ -98,6 +98,7 @@ def run_maniskill2_eval_single_episode(
     image = get_image_from_maniskill2_obs_dict(env, obs, camera_name=obs_camera_name)
     images = [image]
     predicted_actions = []
+    annotated_frames = []
     predicted_terminated, done, truncated = False, False, False
 
     # Initialize model
@@ -109,7 +110,7 @@ def run_maniskill2_eval_single_episode(
     # Step the environment
     while not (predicted_terminated or truncated):
         # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent into maniskill env
-        raw_action, action = model.step(image, task_description)
+        raw_action, action, annotated_image = model.step(image, task_description)
         predicted_actions.append(raw_action)
         predicted_terminated = bool(action["terminate_episode"][0] > 0)
         if predicted_terminated:
@@ -117,6 +118,7 @@ def run_maniskill2_eval_single_episode(
                 # advance the environment to the next subtask
                 predicted_terminated = False
                 env.advance_to_next_subtask()
+        annotated_frames.append(annotated_image)
 
         # step the environment
         obs, reward, done, truncated, info = env.step(
@@ -160,8 +162,9 @@ def run_maniskill2_eval_single_episode(
     r, p, y = quat2euler(robot_init_quat)
     video_path = f"{ckpt_path_basename}/{scene_name}/{control_mode}/{env_save_name}/rob_{robot_init_x}_{robot_init_y}_rot_{r:.3f}_{p:.3f}_{y:.3f}_rgb_overlay_{rgb_overlay_path_str}/{video_name}"
     video_path = os.path.join(logging_dir, video_path)
-    write_video(video_path, images, fps=5)
-
+    # write_video(video_path, images, fps=5)
+    write_video(video_path, annotated_frames, fps=5)
+    
     # save action trajectory
     action_path = video_path.replace(".mp4", ".png")
     action_root = os.path.dirname(action_path) + "/actions/"

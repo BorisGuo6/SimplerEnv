@@ -1,0 +1,95 @@
+version: v2
+description: simpler_eval_pick_coke_can_horizontal_matching_test
+budget: ai2/oe-mm
+tasks:
+- name: eval
+  replicas: 1
+  image:
+    beaker: jiafeid/simpler-docker-ori
+  command: ['/bin/bash', '-c']
+  arguments:
+  - >-
+    nvidia-smi &&
+
+    
+    apt update && apt install libglvnd-dev libvulkan1 libjpeg-dev libpng-dev libglib2.0-0 ffmpeg -y &&
+    source /opt/conda/etc/profile.d/conda.sh &&
+    conda activate simpler_env &&
+    cd /weka/oe-training-default/jasonl/SimplerEnv/ManiSkill2_real2sim &&
+    pip install -e. &&
+    cd /weka/oe-training-default/jasonl/SimplerEnv/ && 
+    pip install -e . &&
+    cd /weka/oe-training-default/jiafeid/MolmoAct/mm_olmo &&
+    pip install -e .[all] --no-deps &&
+    export MOLMO_DATA_DIR=/weka/oe-training-default/mm-olmo &&
+    export HF_HOME=/weka/oe-training-default/mm-olmo/huggingface &&
+    export PYTHONPATH=/weka/oe-training-default/jiafeid/MolmoAct/mm_olmo: &&
+    pip install opencv-python-headless &&
+    pip install "vllm[cuda]==0.8.5" &&
+    pip install transformers==4.52.3 &&
+    pip install omegaconf &&
+    pip install cached_path &&
+    pip install torch==2.6.0 &&
+    pip install "huggingface-hub>=0.30.0,<1.0" --upgrade --no-deps &&
+    pip install datasets &&
+    pip install torchmetrics &&
+    pip install "numpy<2" &&
+    export PYTHONMULTIPROCESSING_START_METHOD=spawn &&
+    export VLLM_WORKER_MULTIPROC_METHOD=spawn &&
+    cd /weka/oe-training-default/jasonl/SimplerEnv &&
+    bash /weka/oe-training-default/jasonl/SimplerEnv/scripts/molmoact_pick_coke_can_test.sh /weka/oe-training-default/jiafeid/MolmoAct/checkpoints-finetune/jul28-siglip2-qwen2_5-jul16-finetune-fractal-50k/jul29-fractalft-molmoer-molmolines-step50000-80steps molmoact
+  
+
+  source /opt/conda/etc/profile.d/conda.sh && conda activate simpler_env && 
+  cd /weka/oe-training-default/jasonl/SimplerEnv/ManiSkill2_real2sim && 
+  pip install -e. && 
+  cd /weka/oe-training-default/jasonl/SimplerEnv &&  
+  pip install -e . && 
+  cd /weka/oe-training-default/jiafeid/MolmoAct/mm_olmo && 
+  pip install -e .[all] --no-deps && 
+  export MOLMO_DATA_DIR=/weka/oe-training-default/mm-olmo && 
+  export HF_HOME=/weka/oe-training-default/mm-olmo/huggingface && 
+  export PYTHONPATH=/weka/oe-training-default/jiafeid/MolmoAct/mm_olmo: && 
+  pip install opencv-python-headless && pip install "vllm[cuda]==0.8.5" && 
+  pip install transformers==4.52.3 && 
+  pip install omegaconf && 
+  pip install cached_path && 
+  pip install torch==2.6.0 &&
+  pip install "huggingface-hub>=0.30.0,<1.0" --upgrade --no-deps && 
+  pip install datasets && pip install torchmetrics && 
+  pip install "numpy<2" && 
+  export PYTHONMULTIPROCESSING_START_METHOD=spawn && 
+  export VLLM_WORKER_MULTIPROC_METHOD=spawn && 
+  cd /weka/oe-training-default/jasonl/SimplerEnv
+
+
+bash /weka/oe-training-default/jasonl/SimplerEnv/scripts/molmoact_pick_coke_can_test.sh /weka/oe-training-default/jiafeid/MolmoAct/checkpoints-frompretrain/aug6-openai-olmo2-pretrained-resize-open-final-100k/aug6-openai-olmo2-pretrained-resize-open-final-100k-step125000-hf molmoact
+
+  datasets:
+  - mountPath: /weka/oe-training-default
+    source:
+      weka: oe-training-default
+  result:
+    path: /data/results
+  envVars:
+  - name: ALLENACT_DEBUG_VST_TIMEOUT
+    value: 2000
+  - name: ALLENACT_DEBUG
+    value: true
+  - name: NCCL_SOCKET_IFNAME
+    value: ib
+  - name: NCCL_TIMEOUT
+    value: 36000000
+  resources:
+    gpuCount: 1
+    memory: 100GiB
+  context:
+    priority: high
+    preemptible: true
+  constraints:
+    cluster: [ ai2/jupiter-cirrascale-2,ai2/ceres-cirrascale, ai2/saturn-cirrascale ]
+  hostNetworking: true
+  leaderSelection: true
+
+retry:
+  allowedTaskRetries: 10
