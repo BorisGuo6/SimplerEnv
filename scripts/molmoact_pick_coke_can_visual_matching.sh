@@ -1,32 +1,15 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# -----------------------------------------------------------------------------
-# Usage check
-# -----------------------------------------------------------------------------
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <ckpt_path> <policy_model> <image_size>"
-  exit 1
-fi
-
-# -----------------------------------------------------------------------------
-# Positional arguments
-# -----------------------------------------------------------------------------
-ckpt="$1"
-policy="$2"
-image_size="3"
-
 
 
 gpu_id=0
 
-declare -a arr=("${ckpt}")
+declare -a arr=("allenai/MolmoAct-7B-D-Pretrain-0812" \
+                "allenai/MolmoAct-7B-D-Pretrain-RT-1-0812")
 
 # lr_switch=laying horizontally but flipped left-right to match real eval; upright=standing; laid_vertically=laying vertically
-declare -a coke_can_options_arr=("lr_switch=True")
+declare -a coke_can_options_arr=("lr_switch=True" "upright=True" "laid_vertically=True")
 
 # URDF variations
-declare -a urdf_version_arr=(None)
+declare -a urdf_version_arr=(None "recolor_tabletop_visual_matching_1" "recolor_tabletop_visual_matching_2" "recolor_cabinet_visual_matching_1")
 
 env_name=GraspSingleOpenedCokeCanInScene-v0
 scene_name=google_pick_coke_can_1_v4
@@ -42,7 +25,7 @@ do for coke_can_option in "${coke_can_options_arr[@]}";
 
 do for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${policy} --ckpt-path ${ckpt_path} -- \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \

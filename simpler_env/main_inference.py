@@ -61,7 +61,6 @@ if __name__ == "__main__":
         model = MolmoActInference(
             saved_model_path = args.ckpt_path,
             policy_setup = args.policy_setup,
-            image_size = args.image_size,
         )
         
     else:
