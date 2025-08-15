@@ -26,6 +26,7 @@ We hope that our work guides and inspires future real-to-sim evaluation efforts.
   - [Full Installation (RT-1 and Octo Inference, Env Building)](#full-installation-rt-1-and-octo-inference-env-building)
     - [RT-1 Inference Setup](#rt-1-inference-setup)
     - [Octo Inference Setup](#octo-inference-setup)
+    - [MolmoAct Inference Setup](#molmoact-inference-setup)
   - [Troubleshooting](#troubleshooting)
   - [Citation](#citation)
 
@@ -96,6 +97,8 @@ Install this package:
 cd {this_repo}
 pip install -e .
 ```
+
+
 
 **If you'd like to perform evaluations on our provided agents (e.g., RT-1, Octo), or add new robots and environments, please additionally follow the full installation instructions [here](#full-installation-rt-1-and-octo-inference-env-building).**
 
@@ -288,6 +291,17 @@ pip install -e .
 If you are using CUDA 12, then to use GPU for Octo inference, you need CUDA version >= 12.2 to satisfy the requirement of Jax; in this case, you can perform a runfile install of the corresponding CUDA (e.g., version 12.3), then set the environment variables whenever you run Octo inference scripts:
 
 `PATH=/usr/local/cuda-12.3/bin:$PATH   LD_LIBRARY_PATH=/usr/local/cuda-12.3/lib64:$LD_LIBRARY_PATH   bash scripts/octo_xxx_script.sh`
+
+### MolmoAct Inference Setup
+
+Install MolmoAct:
+
+```
+pip install opencv-python-headless # if using headless server
+pip install einops torchvision accelerate transformers==4.52.3
+pip install "numpy<2"
+```
+
 
 ## Troubleshooting
 
