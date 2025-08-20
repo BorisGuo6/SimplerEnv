@@ -78,7 +78,7 @@ conda activate simpler_env
 
 Clone this repo:
 ```
-git clone https://github.com/simpler-env/SimplerEnv --recurse-submodules
+git clone https://github.com/allenai/SimplerEnv --recurse-submodules
 ```
 
 Install numpy<2.0 (otherwise errors in IK might occur in pinocchio):
