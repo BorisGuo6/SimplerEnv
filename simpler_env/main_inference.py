@@ -1,11 +1,9 @@
 import os
 
 import numpy as np
-import tensorflow as tf
 
 from simpler_env.evaluation.argparse import get_args
 from simpler_env.evaluation.maniskill2_evaluator import maniskill2_evaluator
-
 
 
 
@@ -16,12 +14,32 @@ except ImportError as e:
     print(e)
 
 
+try:
+    from simpler_env.policies.molmoact.molmoact_model import MolmoActInference
+    from simpler_env.policies.molmoact.molmoact_model_vllm import MolmoActInferenceVLLM
+except ImportError as e:
+    print("MolmoAct is not correctly imported.")
+    print(e)
+
+
 if __name__ == "__main__":
     args = get_args()
 
     os.environ["DISPLAY"] = ""
     # prevent a single jax process from taking up all the GPU memory
     os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+    
+    # CRITICAL FIX: For molmoact-vllm models, we need to initialize PyTorch/vLLM BEFORE TensorFlow
+    # Otherwise TensorFlow fails to register GPU devices and leaves CUDA in a bad state
+    if "molmoact" in args.policy_model and "vllm" in args.policy_model:
+        # Initialize PyTorch CUDA first
+        import torch
+        if torch.cuda.is_available():
+            print(f"Initializing PyTorch CUDA first: {torch.cuda.device_count()} device(s) available")
+            _ = torch.cuda.current_device()
+    
+    # Now import TensorFlow
+    import tensorflow as tf
     gpus = tf.config.list_physical_devices("GPU")
     if len(gpus) > 0:
         # prevent a single tf process from taking up all the GPU memory
@@ -57,12 +75,16 @@ if __name__ == "__main__":
                 action_scale=args.action_scale,
             )
     elif "molmoact" in args.policy_model:
-        from simpler_env.policies.molmoact.molmoact_model import MolmoActInference
-        model = MolmoActInference(
-            saved_model_path = args.ckpt_path,
-            policy_setup = args.policy_setup,
-        )
-        
+        if "hf" in args.policy_model or "vllm" not in args.policy_model:
+            model = MolmoActInference(
+                saved_model_path = args.ckpt_path,
+                policy_setup = args.policy_setup,
+            )
+        elif "vllm" in args.policy_model:
+            model = MolmoActInferenceVLLM(
+                saved_model_path = args.ckpt_path,
+                policy_setup = args.policy_setup,
+            )
     else:
         raise NotImplementedError()
 

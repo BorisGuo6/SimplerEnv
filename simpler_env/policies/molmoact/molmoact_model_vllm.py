@@ -8,12 +8,18 @@ import torch
 import cv2 as cv
 import matplotlib.pyplot as plt
 from PIL import Image
-from transformers import Qwen2Tokenizer, AutoProcessor, AutoModelForImageTextToText
+from transformers import AutoProcessor
 from transforms3d.euler import euler2axangle
+from vllm import LLM, ModelRegistry
+from vllm.model_executor.models.registry import _MULTIMODAL_MODELS
+from vllm.sampling_params import SamplingParams
+from simpler_env.policies.molmoact.molmoact import MolmoActForActionReasoning, MolmoActParser
+ModelRegistry.register_model("MolmoActForActionReasoning", MolmoActForActionReasoning)
+_MULTIMODAL_MODELS["MolmoActForActionReasoning"] = ("molmoact", "MolmoActForActionReasoning")
 
 
 
-class MolmoActInference:
+class MolmoActInferenceVLLM:
     def __init__(
         self,
         saved_model_path: str = "",
@@ -45,12 +51,20 @@ class MolmoActInference:
             padding_side="left",
         )
 
-        self.model = AutoModelForImageTextToText.from_pretrained(
-            saved_model_path,
+        self.model = LLM(
+            model=saved_model_path,
             trust_remote_code=True,
-            torch_dtype="auto",
-            device_map="auto",
+            tensor_parallel_size=torch.cuda.device_count(),
+            gpu_memory_utilization=0.95,
+            dtype="bfloat16",
         )
+
+        self.sampling_params = SamplingParams(
+            max_tokens=256,
+            temperature=0
+        )
+
+        self.parser = MolmoActParser.from_pretrained(saved_model_path)
 
 
         self.image_size = image_size
@@ -136,31 +150,27 @@ class MolmoActInference:
             tokenize=False, 
             add_generation_prompt=True,
         )
-        
-        inputs = self.processor(
-            images=[img],
-            text=text,
-            padding=True,
-            return_tensors="pt",
-        )
-        
-        inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
-        
-        with torch.inference_mode():
-            with torch.autocast("cuda", enabled=True, dtype=torch.bfloat16):
-                generated_ids = self.model.generate(**inputs, max_new_tokens=256)
-                
-        generated_tokens = generated_ids[:, inputs['input_ids'].size(1):]
-        generated_text = self.processor.batch_decode(generated_tokens, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+
+        inputs = [
+            {
+                "prompt": text,
+                "multi_modal_data": {
+                    "image": [img]
+                },
+            },
+        ]
+
+        outputs = self.model.generate(inputs, sampling_params=self.sampling_params)
+        generated_text = outputs[0].outputs[0].text
         # print(generated_text)
 
-        depth = self.model.parse_depth(generated_text)
+        depth = self.parser.parse_depth(generated_text)
         print(f"Depth: {depth}")
 
-        trace = self.model.parse_trace(generated_text)
+        trace = self.parser.parse_trace(generated_text)
         print(f"Trace: {trace}")
 
-        action = self.model.parse_action(generated_text, unnorm_key="fractal20220817_data")
+        action = self.parser.parse_action(generated_text, unnorm_key="fractal20220817_data")
         print(f"Action: {action}")
         
         

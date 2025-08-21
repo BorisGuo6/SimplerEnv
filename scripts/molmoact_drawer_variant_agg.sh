@@ -1,6 +1,31 @@
 # shader_dir=rt means that we turn on ray-tracing rendering; this is quite crucial for the open / close drawer task as policies often rely on shadows to infer depth
 
+# --------------------------
+# Args & policy selection
+# --------------------------
+POLICY_MODEL="molmoact"
+USE_VLLM=0
 
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vllm)
+      USE_VLLM=1
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [--vllm]"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${USE_VLLM}" -eq 1 ]]; then
+  POLICY_MODEL="${POLICY_MODEL}-vllm"
+fi
 
 declare -a ckpt_paths=(
 "allenai/MolmoAct-7B-D-Pretrain-0812"
@@ -25,7 +50,7 @@ scene_name=frl_apartment_stage_simple
 EvalSim() {
   echo ${ckpt_path} ${env_name}
 
-  python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+  python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
     --robot google_robot_static \
     --control-freq 3 --sim-freq 513 --max-episode-steps 113 \
     --env-name ${env_name} --scene-name ${scene_name} \

@@ -1,3 +1,29 @@
+# --------------------------
+# Args & policy selection
+# --------------------------
+POLICY_MODEL="molmoact"
+USE_VLLM=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vllm)
+      USE_VLLM=1
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [--vllm]"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${USE_VLLM}" -eq 1 ]]; then
+  POLICY_MODEL="${POLICY_MODEL}-vllm"
+fi
 
 gpu_id=0
 
@@ -13,7 +39,7 @@ scene_name=google_pick_coke_can_1_v4
 
 for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -28,7 +54,7 @@ done
 
 for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -49,7 +75,7 @@ for scene_name in "${scene_arr[@]}";
 
 do for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -71,7 +97,7 @@ scene_name=google_pick_coke_can_1_v4
 
 for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -79,7 +105,7 @@ do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-
   --robot-init-rot-quat-center 0 0 0 1 --robot-init-rot-rpy-range 0 0 1 0 0 1 -0.09 -0.09 1 \
   --additional-env-build-kwargs slightly_darker_lighting=True;
 
-CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -103,7 +129,7 @@ for scene_name in "${scene_arr[@]}";
 
 do for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
@@ -127,7 +153,7 @@ done
 
 # do for ckpt_path in "${arr[@]}";
 
-# do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+# do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
 #   --robot google_robot_static \
 #   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
 #   --env-name ${env_name} --scene-name ${scene_name} \

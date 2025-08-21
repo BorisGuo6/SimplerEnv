@@ -1,4 +1,29 @@
+# --------------------------
+# Args & policy selection
+# --------------------------
+POLICY_MODEL="molmoact"
+USE_VLLM=0
 
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vllm)
+      USE_VLLM=1
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [--vllm]"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${USE_VLLM}" -eq 1 ]]; then
+  POLICY_MODEL="${POLICY_MODEL}-vllm"
+fi
 
 gpu_id=0
 
@@ -25,7 +50,7 @@ do for coke_can_option in "${coke_can_options_arr[@]}";
 
 do for ckpt_path in "${arr[@]}";
 
-do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model molmoact --ckpt-path ${ckpt_path} \
+do CUDA_VISIBLE_DEVICES=${gpu_id} python simpler_env/main_inference.py --policy-model ${POLICY_MODEL} --ckpt-path ${ckpt_path} \
   --robot google_robot_static \
   --control-freq 3 --sim-freq 513 --max-episode-steps 80 \
   --env-name ${env_name} --scene-name ${scene_name} \
