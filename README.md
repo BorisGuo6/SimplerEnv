@@ -66,13 +66,22 @@ Additionally, you can play with our environments in an interactive manner throug
 
 ## Installation
 
+### Docker
+
+We provide the exact environment used for our experiments in `docker/Dockerfile`. For reproducibility, we recommend building and running this Docker image. If Conda is preferred, follow SimplerEnv’s official Conda setup instructions listed below.
+
+Note that before you build the docker, first copy the `/usr/share/nvidia` folder to `docker/usr_share_nvidia`. You can also find other ways to mount these files during docker build. Refer to this [issue](https://github.com/simpler-env/SimplerEnv/issues/64) for why we need this step.
+
+
+### Conda
+
 Prerequisites:
 - CUDA version >=11.8 (this is required if you want to perform a full installation of this repo and perform RT-1 or Octo inference)
 - An NVIDIA GPU (ideally RTX; for non-RTX GPUs, such as 1080Ti and A100, environments that involve ray tracing will be slow). Currently TPU is not supported as SAPIEN requires a GPU to run.
 
 Create an anaconda environment:
 ```
-conda create -n simpler_env python=3.10 (3.10 or 3.11)
+conda create -n simpler_env python=3.10 # (3.10 or 3.11)
 conda activate simpler_env
 ```
 
@@ -297,8 +306,8 @@ If you are using CUDA 12, then to use GPU for Octo inference, you need CUDA vers
 Install MolmoAct:
 
 ```
-pip install opencv-python-headless # if using headless server
-pip install einops torchvision accelerate transformers==4.52.3
+pip install opencv-python-headless # we were on headless server
+pip install einops torchvision accelerate vllm=0.8.5 transformers==4.52.3
 pip install "numpy<2"
 ```
 
