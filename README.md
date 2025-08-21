@@ -72,6 +72,13 @@ We provide the exact environment used for our experiments in `docker/Dockerfile`
 
 Note that before you build the docker, first copy the `/usr/share/nvidia` folder to `docker/usr_share_nvidia`. You can also find other ways to mount these files during docker build. Refer to this [issue](https://github.com/simpler-env/SimplerEnv/issues/64) for why we need this step.
 
+If you’d rather work from a local checkout instead of the copy bundled in the Docker image, do an editable install inside the container before running any scripts:
+```
+pip install -e /path/to/your/SimplerEnv
+```
+This points Python to your local repo while reusing the dependencies already included in the Docker image.
+
+
 
 ### Conda
 
