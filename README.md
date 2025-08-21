@@ -318,6 +318,8 @@ pip install einops torchvision accelerate vllm=0.8.5 transformers==4.52.3
 pip install "numpy<2"
 ```
 
+For reference, MolmoAct's SimplerEnv numbers were run with the vllm setup.
+
 
 ## Troubleshooting
 
