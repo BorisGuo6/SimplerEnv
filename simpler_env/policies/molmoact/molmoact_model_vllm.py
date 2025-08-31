@@ -46,7 +46,7 @@ class MolmoActInferenceVLLM:
         self.processor = AutoProcessor.from_pretrained(
             saved_model_path,
             trust_remote_code=True,
-            torch_dtype="auto",
+            torch_dtype="bfloat16",
             device_map="auto",
             padding_side="left",
         )
