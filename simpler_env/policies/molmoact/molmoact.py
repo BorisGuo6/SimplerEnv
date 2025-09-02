@@ -1872,6 +1872,8 @@ class MolmoActParser:
         q01 = np.asarray(stats["q01"], dtype=np.float32)
         q99 = np.asarray(stats["q99"], dtype=np.float32)
         mask = np.asarray(stats.get("mask", np.ones_like(q01, dtype=bool)), dtype=bool)
+        # the gripper state should not be normalized
+        mask[-1] = False
 
         # Lazily load the tokenizer (shared across calls)
         if self._qwen_tokenizer is None:
