@@ -113,6 +113,8 @@ def get_args():
     parser.add_argument("--logging-dir", type=str, default="./results")
     parser.add_argument("--tf-memory-limit", type=int, default=3072, help="Tensorflow memory limit")
     parser.add_argument("--octo-init-rng", type=int, default=0, help="Octo init rng seed")
+    parser.add_argument("--headless", action="store_true", help="Run without an X11 display (sets DISPLAY='' internally)")
+    parser.add_argument("--viewer", action="store_true", help="Open an interactive viewer window (requires a working X11 display)")
 
     args = parser.parse_args()
 

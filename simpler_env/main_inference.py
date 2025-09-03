@@ -25,7 +25,11 @@ except ImportError as e:
 if __name__ == "__main__":
     args = get_args()
 
-    os.environ["DISPLAY"] = ""
+    # Determine display mode
+    if args.headless and args.viewer:
+        print("Warning: both --headless and --viewer were specified; defaulting to --viewer (interactive).")
+    if args.headless and not args.viewer:
+        os.environ["DISPLAY"] = ""
     # prevent a single jax process from taking up all the GPU memory
     os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
     

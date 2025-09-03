@@ -9,7 +9,7 @@ from transforms3d.euler import quat2euler
 
 from simpler_env.utils.env.env_builder import build_maniskill2_env, get_robot_control_mode
 from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_obs_dict
-from simpler_env.utils.visualization import write_video
+from simpler_env.utils.visualization import write_video, annotate_action_on_image
 
 
 def run_maniskill2_eval_single_episode(
@@ -35,6 +35,7 @@ def run_maniskill2_eval_single_episode(
     enable_raytracing=False,
     additional_env_save_tags=None,
     logging_dir="./results",
+    headless=False,
 ):
 
     if additional_env_build_kwargs is None:
@@ -52,6 +53,12 @@ def run_maniskill2_eval_single_episode(
         camera_cfgs={"add_segmentation": True},
         rgb_overlay_path=rgb_overlay_path,
     )
+    # Avoid GLFW initialization when running headless or when no DISPLAY is available
+    renderer_kwargs = {}
+    if headless or os.environ.get("DISPLAY", "") == "":
+        renderer_kwargs["offscreen_only"] = True
+    if len(renderer_kwargs) > 0:
+        kwargs["renderer_kwargs"] = renderer_kwargs
     if enable_raytracing:
         ray_tracing_dict = {"shader_dir": "rt"}
         ray_tracing_dict.update(additional_env_build_kwargs)
@@ -109,8 +116,13 @@ def run_maniskill2_eval_single_episode(
 
     # Step the environment
     while not (predicted_terminated or truncated):
-        # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent into maniskill env
-        raw_action, action, annotated_image = model.step(image, task_description)
+        # step the model; "raw_action" is raw model action output; "action" is the processed action to be sent to maniskill env
+        _step = model.step(image, task_description)
+        if isinstance(_step, tuple) and len(_step) == 3:
+            raw_action, action, annotated_image = _step
+        else:
+            raw_action, action = _step
+            annotated_image = annotate_action_on_image(image, action)
         predicted_actions.append(raw_action)
         predicted_terminated = bool(action["terminate_episode"][0] > 0)
         if predicted_terminated:
@@ -202,6 +214,7 @@ def maniskill2_evaluator(model, args):
                     additional_env_save_tags=args.additional_env_save_tags,
                     obs_camera_name=args.obs_camera_name,
                     logging_dir=args.logging_dir,
+                    headless=(not args.viewer) or args.headless,
                 )
                 if args.obj_variation_mode == "xy":
                     for obj_init_x in args.obj_init_xs:

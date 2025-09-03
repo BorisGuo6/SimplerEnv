@@ -18,6 +18,7 @@ import tensorflow as tf
 import simpler_env
 from simpler_env import ENVIRONMENTS
 from simpler_env.utils.env.observation_utils import get_image_from_maniskill2_obs_dict
+from simpler_env.utils.visualization import annotate_action_on_image
 
 parser = argparse.ArgumentParser()
 
@@ -35,6 +36,8 @@ parser.add_argument(
 parser.add_argument("--logging-root", type=str, default="./results_simple_random_eval")
 parser.add_argument("--tf-memory-limit", type=int, default=3072)
 parser.add_argument("--n-trajs", type=int, default=10)
+parser.add_argument("--headless", action="store_true", help="Run without an X11 display (sets DISPLAY='' internally)")
+parser.add_argument("--viewer", action="store_true", help="Open an interactive viewer window (requires a working X11 display)")
 
 args = parser.parse_args()
 if args.policy in ["octo-base", "octo-small"]:
@@ -45,7 +48,9 @@ if args.ckpt_path[-1] == "/":
 logging_dir = os.path.join(args.logging_root, args.task, args.policy, os.path.basename(args.ckpt_path))
 os.makedirs(logging_dir, exist_ok=True)
 
-os.environ["DISPLAY"] = ""
+# Default to offscreen unless viewer explicitly requested
+if not args.viewer or args.headless:
+    os.environ["DISPLAY"] = ""
 # prevent a single jax process from taking up all the GPU memory
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 gpus = tf.config.list_physical_devices("GPU")
@@ -91,6 +96,7 @@ for ep_id in range(args.n_trajs):
 
     image = get_image_from_maniskill2_obs_dict(env, obs)  # np.ndarray of shape (H, W, 3), uint8
     images = [image]
+    annotated_images = [image]
     predicted_terminated, success, truncated = False, False, False
     timestep = 0
     while not (predicted_terminated or truncated):
@@ -116,12 +122,13 @@ for ep_id in range(args.n_trajs):
         # update image observation
         image = get_image_from_maniskill2_obs_dict(env, obs)
         images.append(image)
+        annotated_images.append(annotate_action_on_image(image, action))
         timestep += 1
 
     episode_stats = info.get("episode_stats", {})
     success_arr.append(success)
     print(f"Episode {ep_id} success: {success}")
-    media.write_video(f"{logging_dir}/episode_{ep_id}_success_{success}.mp4", images, fps=5)
+    media.write_video(f"{logging_dir}/episode_{ep_id}_success_{success}.mp4", annotated_images, fps=5)
 
 print(
     "**Overall Success**",

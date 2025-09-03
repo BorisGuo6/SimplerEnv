@@ -28,6 +28,76 @@ def write_video(path, images, fps=5):
     media.write_video(path, images_npy, fps=fps)
 
 
+def annotate_action_on_image(image: np.ndarray, action: dict, scale: float = 80.0) -> np.ndarray:
+    """
+    Overlay a simple visualization of the action on the RGB frame.
+    - world_vector: drawn as a 2D arrow (x,y components) from the image center
+    - rot_axangle: displayed as text (axis*angle)
+    - gripper & terminate_episode: displayed as text badges
+
+    Args:
+        image: HxWx3 uint8
+        action: dict with keys 'world_vector' (3,), 'rot_axangle' (3,), 'gripper' (1,), 'terminate_episode' (1,)
+        scale: scalar to convert normalized displacement magnitude into pixels for the arrow length
+    Returns:
+        np.ndarray HxWx3 uint8 with overlay
+    """
+    img = Image.fromarray(image.copy())
+    draw = ImageDraw.Draw(img)
+
+    # Font setup (fallback to default if custom font missing)
+    try:
+        font = ImageFont.truetype(FONT_PATH, 16)
+    except Exception:
+        font = ImageFont.load_default()
+
+    h, w = image.shape[:2]
+    cx, cy = w // 2, h // 2
+
+    # Draw translation arrow (x right, y down in image coords). We map world x->+x, world y->-y for a rough top-down mapping.
+    if action is not None and "world_vector" in action:
+        wx, wy, wz = [float(x) for x in action["world_vector"]]
+        end_x = int(round(cx + wx * scale))
+        end_y = int(round(cy - wy * scale))
+        draw.line([(cx, cy), (end_x, end_y)], fill=(0, 255, 0), width=3)
+        # Arrow head
+        ah = 8
+        draw.ellipse([(end_x - ah, end_y - ah), (end_x + ah, end_y + ah)], outline=(0, 255, 0), width=3)
+
+    # Compose info text block
+    rot_txt = ""
+    if action is not None and "rot_axangle" in action:
+        rx, ry, rz = [float(x) for x in action["rot_axangle"]]
+        rot_txt = f"rot(ax*ang): [{rx:+.2f}, {ry:+.2f}, {rz:+.2f}]"
+    grip_txt = ""
+    if action is not None and "gripper" in action:
+        grip = float(action["gripper"][0]) if hasattr(action["gripper"], "__len__") else float(action["gripper"])
+        grip_txt = f"grip: {grip:+.2f}"
+    term_txt = ""
+    if action is not None and "terminate_episode" in action:
+        term = float(action["terminate_episode"][0]) if hasattr(action["terminate_episode"], "__len__") else float(action["terminate_episode"])
+        term_txt = f"term: {int(term > 0.5)}"
+
+    lines = []
+    if rot_txt:
+        lines.append(rot_txt)
+    if grip_txt:
+        lines.append(grip_txt)
+    if term_txt:
+        lines.append(term_txt)
+
+    if lines:
+        text = "\n".join(lines)
+        # Draw background box for readability
+        text_w, text_h = draw.multiline_textsize(text, font=font, spacing=2)
+        pad = 6
+        box_xy = [(10, 10), (10 + text_w + 2 * pad, 10 + text_h + 2 * pad)]
+        draw.rectangle(box_xy, fill=(0, 0, 0))
+        draw.multiline_text((10 + pad, 10 + pad), text, fill=(255, 255, 255), font=font, spacing=2)
+
+    return np.asarray(img)
+
+
 def plot_pred_and_gt_action_trajectory(predicted_actions, gt_actions, stacked_images):
     """
     Plot predicted and ground truth action trajectory
