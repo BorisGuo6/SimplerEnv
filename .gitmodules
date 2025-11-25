@@ -2,5 +2,8 @@
 	path = ManiSkill2_real2sim
 	url = https://github.com/simpler-env/ManiSkill2_real2sim
 [submodule "octo"]
-	path = octo
+	path = 3rdparty/octo
 	url = https://github.com/octo-models/octo.git
+[submodule "molmoact"]
+	path = 3rdparty/molmoact
+	url = https://github.com/BorisGuo6/molmoact.git
