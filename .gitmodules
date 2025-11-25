@@ -7,3 +7,6 @@
 [submodule "molmoact"]
 	path = 3rdparty/molmoact
 	url = https://github.com/BorisGuo6/molmoact.git
+[submodule "spear1-franka"]
+	path = 3rdparty/spear1-franka
+	url = https://huggingface.co/INSAIT-Institute/spear1-franka
